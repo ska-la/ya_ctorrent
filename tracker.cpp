@@ -18,6 +18,9 @@
 #include "ctcs.h"
 #include "console.h"
 #include "bttime.h"
+//--- made by SKA ---
+#include "btgetenv.h"
+//--- made by SKA ---
 
 #if !defined(HAVE_SNPRINTF) || !defined(HAVE_RANDOM)
 #include "compat.h"
@@ -28,6 +31,9 @@ btTracker Tracker;
 btTracker::btTracker()
 {
   memset(m_host,0,MAXHOSTNAMELEN);
+//--- made by SKA ---
+  memset(p_host,0,MAXHOSTNAMELEN);
+//--- made by SKA ---
   memset(m_path,0,MAXPATHLEN);
   memset(m_trackerid,0,PEER_ID_LEN+1);
 
@@ -35,7 +41,9 @@ btTracker::btTracker()
   m_port = 80;
   m_status = T_FREE;
   m_f_started = m_f_stoped = m_f_completed = m_f_restart = 0;
-
+//--- made by SKA ---
+  p_port = 3128;                 // default value for proxy's port
+//--- made by SKA ---
   m_interval = 15;
   m_peers_count = m_seeds_count = 0;
 
@@ -318,6 +326,13 @@ int btTracker::CheckReponse()
 
 int btTracker::Initial()
 {
+//--- made by SKA ---
+  if(Http_proxy_analyse(getenv("http_proxy"),p_host,&p_port) < 0){
+    if ( p_host[0] != 0 ) {
+      CONSOLE.Warning(1, "error, invalid proxy url format!");
+    }
+  }
+//--- made by SKA ---
   if(Http_url_analyse(BTCONTENT.GetAnnounce(),m_host,&m_port,m_path) < 0){
     CONSOLE.Warning(1, "error, invalid tracker url format!");
     return -1;
@@ -419,10 +434,19 @@ int btTracker::Connect()
   ssize_t r;
   time(&m_last_timestamp);
 
-  if(_s2sin(m_host,m_port,&m_sin) < 0) {
+//--- made by SKA ---
+  if ( p_host[0] == 0 ) {
+    if(_s2sin(m_host,m_port,&m_sin) < 0) {
     CONSOLE.Warning(2, "warn, get tracker's ip address failed.");
     return -1;
+    }
+  } else {
+    if(_s2sin(p_host,p_port,&m_sin) < 0) {
+    CONSOLE.Warning(2, "warn, get proxy's ip address failed.");
+    return -1;
+    }
   }
+//--- made by SKA ---
 
   m_sock = socket(AF_INET,SOCK_STREAM,0);
   if(INVALID_SOCKET == m_sock) return -1;

@@ -37,7 +37,10 @@ class btTracker
   int m_port;
   char m_key[9];
   char m_trackerid[PEER_ID_LEN+1];
-
+//--- made by SKA ---
+  char p_host[MAXHOSTNAMELEN];    // proxy host
+  int p_port;                     // proxy port
+//--- made by SKA ---
   struct sockaddr_in m_sin;
 
   unsigned char m_status:2;
