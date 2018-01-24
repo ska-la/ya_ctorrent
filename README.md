@@ -9,10 +9,17 @@ $ apt-get source ctorrent
 Clone it and compile:
 ```Shell
 $ git clone ...
+$ cd ya_ctorrent
 $ ./configure
 $ sudo make install
 ```
 Couple problems refer to old versions of programs which are used during compilation. It's solved with simlinks on current versions of ones.
+To compile DEB package with Debian patches do it:
+```Shell
+$ cd ya_ctorrent
+$ dpkg-buildpackage --build=any
+$ dpkg-deb -b debian/ctorrent/ my_ctorrent.deb
+```
 ### Example
 When proxy server provides 3128 port (by default), use:
 ```Shell
