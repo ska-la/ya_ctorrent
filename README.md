@@ -1,5 +1,5 @@
 ## Why?
-Original ctorrent programm doesn't support environment variables at all. As result, we cann't adapt it to our circumstances. The patch implements support of HTTP_PROXY environment variable.
+Genuine ctorrent programm doesn't support environment variables at all. As result, we cann't adapt it to our circumstances. The patch implements support of HTTP_PROXY environment variable.
 ___
 A source code was taken from Debian repository:
 ```Shell
