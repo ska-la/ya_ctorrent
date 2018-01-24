@@ -14,6 +14,7 @@ $ ./configure
 $ sudo make install
 ```
 Couple problems refer to old versions of programs which are used during compilation. It's solved with simlinks on current versions of ones.
+
 To compile DEB package with Debian patches do it:
 ```Shell
 $ cd ya_ctorrent
