@@ -21,6 +21,14 @@ $ cd ya_ctorrent
 $ dpkg-buildpackage --build=any
 $ dpkg-deb -b debian/ctorrent/ my_ctorrent.deb
 ```
+To install the package:
+```Shell
+$ sudo dpkg -i --no-debsig my_ctorrent.deb
+```
+To remove the package:
+```Shell
+$ sudo dpkg -r ctorrent
+```
 ### Example
 When proxy server provides 3128 port (by default), use:
 ```Shell
