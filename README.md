@@ -18,12 +18,11 @@ Couple problems refer to old versions of programs which are used during compilat
 To compile DEB package with Debian patches do it:
 ```Shell
 $ cd ya_ctorrent
-$ dpkg-buildpackage --build=any
-$ dpkg-deb -b debian/ctorrent/ my_ctorrent.deb
+$ dpkg-buildpackage --no-sign
 ```
 To install the package:
 ```Shell
-$ sudo dpkg -i --no-debsig my_ctorrent.deb
+$ sudo dpkg -i --no-debsig ../ctorrent_1.3.4.xxx.deb
 ```
 To remove the package:
 ```Shell
