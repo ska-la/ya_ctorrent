@@ -10,10 +10,10 @@ Clone it and compile:
 ```Shell
 $ git clone ...
 $ cd ya_ctorrent
+$ autoreconf -isvf
 $ ./configure
 $ sudo make install
 ```
-Couple problems refer to old versions of programs which are used during compilation. It's solved with simlinks on current versions of ones.
 
 To compile DEB package with Debian patches do it:
 ```Shell
