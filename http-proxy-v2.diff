@@ -1,0 +1,171 @@
+Description: no bug being fixed, only new feature being intruduced
+ The patch implements possibility for CTorrent client to achive a tracker
+ over a circumvent. HTTP_PROXY environment variable provides the ability.
+ Hetherto the client doesn't use the feature.
+ .
+ ctorrent (1.3.4.dnh3.3.2-5) unstable; urgency=low
+ .
+   * Orphaned package.
+Author: Konstantin Suchkov <ak.vokchus@gmail.com>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: 2018-05-21
+
+Index: ctorrent-1.3.4.dnh3.3.2/btgetenv.cpp
+===================================================================
+--- /dev/null
++++ ctorrent-1.3.4.dnh3.3.2/btgetenv.cpp
+@@ -0,0 +1,30 @@
++#include <stdlib.h>
++#include <ctype.h>
++#include "btgetenv.h"
++
++int Http_proxy_analyse(const char *url,char *host,int *port)
++{
++  if (url == NULL) return -1;
++
++  const char *p;
++  int r;
++  *port = 3128;	/* default proxy port 3128 */
++  p = url;
++  /* host */
++  for(; *p && (isalnum(*p) || *p == '.' || *p == '-'); p++, host++)
++    *host = *p;
++  *host = '\0';
++
++  if( *p == ':' ){
++    /* port */
++    p++;
++    for( r = 0; p[r] >= '0' && p[r] <= '9' && r < 6; r++) ;
++
++    if( !r ) return -1;
++    *port = atoi(p);
++    if(*port > 65536) return -1;
++    p += r;
++  }
++  return 0;
++}
++
+Index: ctorrent-1.3.4.dnh3.3.2/btgetenv.h
+===================================================================
+--- /dev/null
++++ ctorrent-1.3.4.dnh3.3.2/btgetenv.h
+@@ -0,0 +1,6 @@
++#ifndef BTGETENV_H
++#define BTGETENV_H
++
++int Http_proxy_analyse(const char *,char *,int *);
++
++#endif
+Index: ctorrent-1.3.4.dnh3.3.2/tracker.cpp
+===================================================================
+--- ctorrent-1.3.4.dnh3.3.2.orig/tracker.cpp
++++ ctorrent-1.3.4.dnh3.3.2/tracker.cpp
+@@ -18,6 +18,7 @@
+ #include "ctcs.h"
+ #include "console.h"
+ #include "bttime.h"
++#include "btgetenv.h"
+ 
+ #if !defined(HAVE_SNPRINTF) || !defined(HAVE_RANDOM)
+ #include "compat.h"
+@@ -28,6 +29,7 @@ btTracker Tracker;
+ btTracker::btTracker()
+ {
+   memset(m_host,0,MAXHOSTNAMELEN);
++  memset(p_host,0,MAXHOSTNAMELEN);
+   memset(m_path,0,MAXPATHLEN);
+   memset(m_trackerid,0,PEER_ID_LEN+1);
+ 
+@@ -35,7 +37,7 @@ btTracker::btTracker()
+   m_port = 80;
+   m_status = T_FREE;
+   m_f_started = m_f_stoped = m_f_completed = m_f_restart = 0;
+-
++  p_port = 3128;                 // default value for proxy's port
+   m_interval = 15;
+   m_peers_count = m_seeds_count = 0;
+ 
+@@ -318,6 +320,11 @@ int btTracker::CheckReponse()
+ 
+ int btTracker::Initial()
+ {
++  if(Http_proxy_analyse(getenv("http_proxy"),p_host,&p_port) < 0){
++    if ( p_host[0] != 0 ) {
++      CONSOLE.Warning(1, "error, invalid proxy url format!");
++    }
++  }
+   if(Http_url_analyse(BTCONTENT.GetAnnounce(),m_host,&m_port,m_path) < 0){
+     CONSOLE.Warning(1, "error, invalid tracker url format!");
+     return -1;
+@@ -419,9 +426,16 @@ int btTracker::Connect()
+   ssize_t r;
+   time(&m_last_timestamp);
+ 
+-  if(_s2sin(m_host,m_port,&m_sin) < 0) {
++  if ( p_host[0] == 0 ) {
++    if(_s2sin(m_host,m_port,&m_sin) < 0) {
+     CONSOLE.Warning(2, "warn, get tracker's ip address failed.");
+     return -1;
++    }
++  } else {
++    if(_s2sin(p_host,p_port,&m_sin) < 0) {
++    CONSOLE.Warning(2, "warn, get proxy's ip address failed.");
++    return -1;
++    }
+   }
+ 
+   m_sock = socket(AF_INET,SOCK_STREAM,0);
+Index: ctorrent-1.3.4.dnh3.3.2/tracker.h
+===================================================================
+--- ctorrent-1.3.4.dnh3.3.2.orig/tracker.h
++++ ctorrent-1.3.4.dnh3.3.2/tracker.h
+@@ -37,7 +37,8 @@ class btTracker
+   int m_port;
+   char m_key[9];
+   char m_trackerid[PEER_ID_LEN+1];
+-
++  char p_host[MAXHOSTNAMELEN];    // proxy host
++  int p_port;                     // proxy port
+   struct sockaddr_in m_sin;
+ 
+   unsigned char m_status:2;
+Index: ctorrent-1.3.4.dnh3.3.2/Makefile.in
+===================================================================
+--- ctorrent-1.3.4.dnh3.3.2.orig/Makefile.in
++++ ctorrent-1.3.4.dnh3.3.2/Makefile.in
+@@ -57,6 +57,7 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
+ PROGRAMS = $(bin_PROGRAMS)
+ am_ctorrent_OBJECTS = bencode.$(OBJEXT) bitfield.$(OBJEXT) \
+ 	btconfig.$(OBJEXT) btcontent.$(OBJEXT) btfiles.$(OBJEXT) \
++	btgetenv.$(OBJEXT) \
+ 	btrequest.$(OBJEXT) btstream.$(OBJEXT) bufio.$(OBJEXT) \
+ 	compat.$(OBJEXT) connect_nonb.$(OBJEXT) console.$(OBJEXT) \
+ 	ctcs.$(OBJEXT) ctorrent.$(OBJEXT) downloader.$(OBJEXT) \
+@@ -170,7 +171,7 @@ sbindir = @sbindir@
+ sharedstatedir = @sharedstatedir@
+ sysconfdir = @sysconfdir@
+ target_alias = @target_alias@
+-ctorrent_SOURCES = bencode.cpp bitfield.cpp btconfig.cpp btcontent.cpp btfiles.cpp btrequest.cpp btstream.cpp bufio.cpp compat.c connect_nonb.cpp console.cpp ctcs.cpp ctorrent.cpp downloader.cpp httpencode.cpp iplist.cpp peer.cpp peerlist.cpp rate.cpp setnonblock.cpp sigint.cpp tracker.cpp sha1.c bencode.h bitfield.h btconfig.h btcontent.h btfiles.h btrequest.h btstream.h bttime.h bufio.h compat.h connect_nonb.h console.h ctcs.h def.h downloader.h httpencode.h iplist.h msgencode.h peer.h peerlist.h rate.h setnonblock.h sigint.h tracker.h sha1.h
++ctorrent_SOURCES = bencode.cpp bitfield.cpp btconfig.cpp btcontent.cpp btfiles.cpp btgetenv.cpp btrequest.cpp btstream.cpp bufio.cpp compat.c connect_nonb.cpp console.cpp ctcs.cpp ctorrent.cpp downloader.cpp httpencode.cpp iplist.cpp peer.cpp peerlist.cpp rate.cpp setnonblock.cpp sigint.cpp tracker.cpp sha1.c bencode.h bitfield.h btconfig.h btcontent.h btfiles.h btgetenv.h btrequest.h btstream.h bttime.h bufio.h compat.h connect_nonb.h console.h ctcs.h def.h downloader.h httpencode.h iplist.h msgencode.h peer.h peerlist.h rate.h setnonblock.h sigint.h tracker.h sha1.h
+ all: config.h
+ 	$(MAKE) $(AM_MAKEFLAGS) all-am
+ 
+@@ -264,6 +265,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btconfig.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btcontent.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btfiles.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btgetenv.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btrequest.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/btstream.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bufio.Po@am__quote@
