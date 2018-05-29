@@ -1,5 +1,5 @@
 Description: ENVIRONMENT section being filled, DESCRIPTION section being moved up, made a minor text formatting
-Author: Konstantin Suchkov <ak.vokchus@gmail.com>
+Owner: Konstantin Suchkov <ak.vokchus@gmail.com>
 
 diff -Naurd ctorrent-1.3.4.dnh3.3.2~/debian/ctorrent.1 ctorrent-1.3.4.dnh3.3.2/debian/ctorrent.1
 --- ctorrent-1.3.4.dnh3.3.2~/debian/ctorrent.1	2018-05-21 11:33:34.398587820 +0300

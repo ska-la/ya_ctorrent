@@ -6,18 +6,16 @@ A source code was taken from Debian repository:
 $ apt-get source ctorrent
 ```
 ### HowTo
-Clone it and compile:
+Get .diff and .patch files and then:
 ```Shell
-$ git clone ...
-$ cd ya_ctorrent
-$ autoreconf -isvf
-$ ./configure
-$ sudo make install
+$ cd ctorrent-1.3.4.dnh3.3.2
+$ patch -p1 < ../ctorrent.1.patch
+$ quilt import ../http-proxy-v2.diff
+$ quilt push
 ```
 
 To compile DEB package with Debian patches do it:
 ```Shell
-$ cd ya_ctorrent
 $ dpkg-buildpackage --no-sign
 ```
 To install the package:
