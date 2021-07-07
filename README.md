@@ -5,6 +5,8 @@ A source code was taken from Debian repository:
 ```Shell
 $ apt-get source ctorrent
 ```
+It's required some additional packages (and their dependencies) to be installed: dpkg-dev, quilt, debhelper.
+
 ### HowTo
 Get .diff and .patch files and then:
 ```Shell
@@ -16,7 +18,7 @@ $ quilt push
 
 To compile DEB package with Debian patches do it:
 ```Shell
-$ dpkg-buildpackage --no-sign
+$ dpkg-buildpackage --no-sign -d
 ```
 To install the package:
 ```Shell
