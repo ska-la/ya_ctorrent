@@ -1,12 +1,12 @@
 ## Why?
 Genuine ctorrent programm doesn't support environment variables at all. As result, we cann't adapt it to our circumstances. The patch implements support of HTTP_PROXY environment variable.
 ___
+It's required some additional packages (and their dependencies) to be installed: dpkg-dev, quilt, debhelper.
+
 A source code was taken from Debian repository:
 ```Shell
 $ apt-get source ctorrent
 ```
-It's required some additional packages (and their dependencies) to be installed: dpkg-dev, quilt, debhelper.
-
 ### HowTo
 Get .diff and .patch files and then:
 ```Shell
