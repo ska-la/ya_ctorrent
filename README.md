@@ -5,10 +5,17 @@ It's required some additional packages (and their dependencies) to be installed:
 
 A source code was taken from Debian repository:
 ```Shell
+$ mkdir -p /tmp/ctorrent
+$ cd /tmp/ctorrent
 $ apt-get source ctorrent
 ```
 ### HowTo
-Get .diff and .patch files and then:
+Get .diff and .patch files
+```Shell
+$ git clone <the repository URL>
+$ cp -iv ya_ctorrent/{ctorrent.1.patch,http-proxy-v2.diff} .
+```
+and then:
 ```Shell
 $ cd ctorrent-1.3.4.dnh3.3.2
 $ patch -p1 < ../ctorrent.1.patch
